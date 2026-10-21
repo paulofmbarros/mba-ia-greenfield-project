@@ -1,7 +1,7 @@
 ---
 scope_type: phase
 related_phases: [3]
-status: pending
+status: decided
 date: 2026-10-21
 scope_description: "Video upload (up to 10GB, resumable), object storage, background processing queue and worker, unique video URL, streaming and download delivery."
 ---

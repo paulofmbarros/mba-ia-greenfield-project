@@ -38,7 +38,7 @@
   - Migration `1792595000000-CreateVideos` hand-written with explicit constraint/index names (not the TypeORM-hashed names).
   - `Channel` now references `Video`, so `Video` was added to the entity lists of 11 existing test files; `cleanAllTables` now also clears `videos` (guarded with `to_regclass`).
   - `migrations.integration-spec.ts` now covers 3 migrations and drops the leftover `verification_tokens_type_enum` before migrating (DROP TABLE leaves the enum behind, which made the suite fail on a DB previously synced by other suites).
-  - `npm run lint` already reports 193 problems in untouched files (e.g. test/auth.e2e-spec.ts, auth.service.spec.ts); out of scope here, but the Definition of Done requires lint to pass, so it needs a separate task. Files I touched introduce no new lint errors.
+  - (at that time) `npm run lint` reported 193 problems in untouched files; resolved before phase close, see Final verification (e.g. test/auth.e2e-spec.ts, auth.service.spec.ts); out of scope here, but the Definition of Done requires lint to pass, so it needs a separate task. Files I touched introduce no new lint errors.
   - A `git stash` baseline check hung (compose services removed by the stash) and a prettier run reformatted two `.hbs` templates; both reverted/restored, tree intact.
 
 ### SI-03.5 — Gerar identificador público do vídeo
@@ -175,4 +175,7 @@
 
 - `jest src --runInBand`: 245 passing (39 suites). `jest --config test/jest-e2e.json --runInBand`: 79 passing (9 suites).
 - `tsc --noEmit`: exit 0. `npm run build`: emits `dist/main.js` and `dist/worker.main.js`.
-- `npm run lint` (read-only run): 190 problems (150 errors, 40 warnings), all in files and lines that predate this phase (auth, channels, mail, users, filters, config and test helpers); no problem in any file created by this phase. Definition of Done item 4 is therefore not met repo-wide.
+- `npm run lint`: exit 0 (re-verified on the host and inside the `nestjs-api` container; 0 errors, 0 warnings). The 190-problem backlog mentioned in SI-03.4 and SI-03.7 no longer exists, so Definition of Done item 4 is met.
+- Full suites re-run at close: `jest --runInBand` 245 passing (39 suites), `jest --config test/jest-e2e.json --runInBand` 79 passing (9 suites), `tsc --noEmit` exit 0.
+- AI docs updated: root `CLAUDE.md` (Architecture + new "Videos (Phase 03)" section) and `nestjs-project/CLAUDE.md` (services, "Videos Module" section).
+- `library-refs.md` added. Context7 was unavailable when it was written; notes come from the installed packages and the SI-03.1 spike (stated in the file).
