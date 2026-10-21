@@ -1,7 +1,7 @@
 ---
 scope_type: phase
 related_phases: [3]
-status: pending
+status: decided
 date: 2026-10-21
 scope_description: "Video upload (up to 10GB, resumable), object storage, background processing queue and worker, unique video URL, streaming and download delivery."
 ---
@@ -55,6 +55,10 @@ _Notes:_
 **Recommendation:** A (SeaweedFS) — it is the only option that is open-source, actively maintained and production-capable. Because code speaks plain S3, B is a cheap fallback if A's compose complexity is too high. Run a spike on multipart with Range and presigned URLs first.
 
 **Decision:** A
+
+**Revisions:**
+
+- 2026-10-21 — Spike do SI-03.1 executado contra SeaweedFS 4.48 (`chrislusf/seaweedfs`, `weed mini`, gateway S3 em `:8333`, bucket `streamtube-videos`), com credenciais estáticas via `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` e path-style addressing. Resultados: (1) **Multipart com URLs presignadas de parte**: `CreateMultipartUpload` + `UploadPart` presignado (2 partes, 5MiB + 1MiB) + `ListParts` + `CompleteMultipartUpload` funcionam, e o objeto lido de volta tem o mesmo conteúdo (MD5 idêntico). (2) **GET presignado com Range**: `Range: bytes=0-99` retorna `206` com 100 bytes e `Content-Range: bytes 0-99/<total>`; `Accept-Ranges: bytes` presente; `ResponseContentDisposition` no GET presignado é respeitado (serve o download com nome). (3) **CORS por bucket**: `PutBucketCors` aceito; o preflight `OPTIONS` responde `Access-Control-Expose-Headers: ETag, Content-Range, Accept-Ranges, Content-Length` e libera `PUT, GET, HEAD`. (4) **Lifecycle**: `PutBucketLifecycleConfiguration` aceita tanto regra TTL (`Expiration.Days`) quanto `AbortIncompleteMultipartUpload` e as devolve em `GetBucketLifecycleConfiguration`, mas a aplicação efetiva da regra de abort não é observável no spike (exigiria esperar dias); a conclusão do TD-08 se mantém — o reaper é o mecanismo primário e a regra de lifecycle é só backstop não verificado. (5) `AbortMultipartUpload` e `ListMultipartUploads` funcionam (base do reaper). (6) `HEAD` sobre URL assinada para `GET` retorna 403 (assinatura é por método) — o cliente deve usar GET com Range, não HEAD. _Rationale:_ TD-01 recomendava o spike antes de depender do SeaweedFS; todos os recursos exigidos por TD-02, TD-06 e TD-08 estão presentes, então A permanece e o fallback Garage não é necessário. Aplicação do CORS é automatizada pelo serviço one-shot `storage-init` no Compose (`nestjs-project/storage/cors.json`).
 
 ---
 
